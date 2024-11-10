@@ -2,10 +2,14 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const md5=require("md5")
 const app = express();
 const PORT = process.env.PORT || 5000;
 const dbURL= process.env.MONGO_URL
 const User=require('./models/user.model')
+
+
+// console.log(md5("message"))
 
   mongoose.connect(dbURL)
   .then(()=>{
@@ -29,7 +33,10 @@ app.get("/", (req, res) => {
 app.post("/register",async(req,res)=>{
 
   try {
-    const newUser=new User(req.body)
+    const newUser=new User({
+      email:req.body.email,
+      password:md5(req.body.password)
+    })
    await newUser.save()
     res.status(201).json(newUser)
   } catch (error) {
@@ -39,7 +46,8 @@ app.post("/register",async(req,res)=>{
 })
 app.post("/login",async(req,res)=>{
   try {
-    const {email,password}=req.body
+    const email=req.body.email
+    const password=md5(req.body.password)
     const user=await User.findOne({email:email})
   if(user && user.password==password){
     res.status(200).json({
